@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Shadow Organization HQ</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+
+body{
+background:#050005;
+color:#ff0033;
+font-family:Courier New;
+margin:0;
+}
+
+header{
+text-align:center;
+padding:15px;
+border-bottom:1px solid #ff0033;
+}
+
+#title{
+font-size:28px;
+letter-spacing:4px;
+}
+
+#tabs{
+display:flex;
+justify-content:center;
+margin-top:10px;
+}
+
+.tab{
+padding:10px 20px;
+border:1px solid #ff0033;
+cursor:pointer;
+margin-right:5px;
+}
+
+.tab:hover{
+background:#ff0033;
+color:black;
+}
+
+.panel{
+display:none;
+padding:20px;
+}
+
+#centerLogo{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+text-align:center;
+}
+
+#centerLogo img{
+width:220px;
+}
+
+input,button,textarea,select{
+
+background:black;
+border:1px solid #ff0033;
+color:#ff0033;
+padding:8px;
+margin:4px;
+
+}
+
+button:hover{
+background:#ff0033;
+color:black;
+}
+
+#terminal{
+
+height:220px;
+overflow:auto;
+border:1px solid #ff0033;
+padding:10px;
+white-space:pre-wrap;
+
+}
+
+#chatBox{
+
+height:160px;
+overflow:auto;
+border:1px solid #ff0033;
+padding:10px;
+
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+<div id="title">SHADOW ORGANIZATION MAIN HQ</div>
+
+<div id="announcement">System Online</div>
+
+</header>
+
+
+<div id="tabs">
+
+<div class="tab" onclick="openPanel('missionsPanel')">Missions</div>
+<div class="tab" onclick="openPanel('agentsPanel')">Agents</div>
+<div class="tab" onclick="openPanel('chatPanel')">Chat</div>
+<div class="tab" onclick="openPanel('mapPanel')">Operations</div>
+<div class="tab" onclick="openPanel('aiPanel')">AI Terminal</div>
+<div class="tab" onclick="openPanel('adminPanel')">Admin</div>
+
+</div>
+
+
+<div id="centerLogo">
+
+<img src="logo.png">
+
+</div>
+
+
+
+<!-- MISSIONS -->
+
+<div id="missionsPanel" class="panel">
+
+<h3>Mission Database</h3>
+
+<ul id="missions"></ul>
+
+<input id="mname" placeholder="Mission Name">
+<input id="mloc" placeholder="Location">
+
+<button onclick="addMission()">Add Mission</button>
+
+</div>
+
+
+
+<!-- AGENTS -->
+
+<div id="agentsPanel" class="panel">
+
+<h3>Agent Profiles</h3>
+
+<ul id="agents"></ul>
+
+<input id="aname" placeholder="Agent Name">
+<input id="arank" placeholder="Rank">
+
+<button onclick="addAgent()">Add Agent</button>
+
+</div>
+
+
+
+<!-- CHAT -->
+
+<div id="chatPanel" class="panel">
+
+<h3>Agent Communication</h3>
+
+<div id="chatBox"></div>
+
+<input id="chatInput">
+
+<button onclick="sendChat()">Send</button>
+
+</div>
+
+
+
+<!-- MAP -->
+
+<div id="mapPanel" class="panel">
+
+<h3>Global Operations</h3>
+
+<div onclick="showMap('Arctic Listening Post')">Arctic Listening Post</div>
+<div onclick="showMap('Pacific Shadow Base')">Pacific Shadow Base</div>
+<div onclick="showMap('European Intel Hub')">European Intel Hub</div>
+<div onclick="showMap('Desert Black Site')">Desert Black Site</div>
+
+<div id="mapInfo"></div>
+
+</div>
+
+
+
+<!-- AI -->
+
+<div id="aiPanel" class="panel">
+
+<h3>Shadow AI Terminal</h3>
+
+<div id="terminal">Shadow AI online. Type help.</div>
+
+<input id="command" placeholder="command">
+
+<button onclick="startVoiceAI()">Start Voice AI</button>
+
+</div>
+
+
+
+<!-- ADMIN -->
+
+<div id="adminPanel" class="panel">
+
+<h3>Admin Control</h3>
+
+<input id="lockUser" placeholder="username">
+
+<button onclick="lockUser()">Lock</button>
+<button onclick="unlockUser()">Unlock</button>
+
+<br><br>
+
+<textarea id="announceBox"></textarea>
+
+<button onclick="announce()">Broadcast</button>
+
+<br><br>
+
+<h4>Create User</h4>
+
+<input id="newUser" placeholder="username">
+<input id="newPass" placeholder="password">
+
+<select id="newRole">
+
+<option value="member">Member</option>
+<option value="admin">Admin</option>
+
+</select>
+
+<button onclick="createUser()">Create</button>
+
+</div>
+
+
+
+<!-- LOGIN -->
+
+<div id="loginBox" style="position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);border:1px solid #ff0033;padding:30px;text-align:center;">
+
+<h2>Secure Access</h2>
+
+<input id="user" placeholder="username"><br>
+<input id="pass" type="password" placeholder="password"><br>
+
+<button onclick="login()">ENTER</button>
+
+<p id="msg"></p>
+
+</div>
+
+
+
+<script>
+
+
+let users={
+
+"Shadow Umbra":{password:"Shadow Umbra",role:"owner",locked:false},
+
+"Admin1":{password:"Shadow01",role:"admin",locked:false},
+"Admin2":{password:"Shadow02",role:"admin",locked:false},
+"Admin3":{password:"Shadow03",role:"admin",locked:false},
+"Admin4":{password:"Shadow04",role:"admin",locked:false},
+
+"Agent1":{password:"Agent01",role:"member",locked:false},
+"Agent2":{password:"Agent02",role:"member",locked:false},
+"Agent3":{password:"Agent03",role:"member",locked:false},
+"Agent4":{password:"Agent04",role:"member",locked:false}
+
+}
+
+
+let currentUser=null
+
+
+
+function login(){
+
+let u=document.getElementById("user").value
+let p=document.getElementById("pass").value
+
+if(users[u] && users[u].password===p){
+
+if(users[u].locked){
+
+document.getElementById("msg").innerHTML="ACCOUNT LOCKED"
+return
+
+}
+
+currentUser=u
+
+document.getElementById("loginBox").style.display="none"
+
+}
+
+else{
+
+document.getElementById("msg").innerHTML="ACCESS DENIED"
+
+}
+
+}
+
+
+
+function openPanel(panel){
+
+document.querySelectorAll(".panel").forEach(p=>p.style.display="none")
+
+document.getElementById(panel).style.display="block"
+
+document.getElementById("centerLogo").style.display="none"
+
+}
+
+
+
+function addMission(){
+
+let li=document.createElement("li")
+
+li.innerHTML=document.getElementById("mname").value+" - "+document.getElementById("mloc").value
+
+document.getElementById("missions").appendChild(li)
+
+}
+
+
+
+function addAgent(){
+
+let li=document.createElement("li")
+
+li.innerHTML=document.getElementById("aname").value+" | "+document.getElementById("arank").value
+
+document.getElementById("agents").appendChild(li)
+
+}
+
+
+
+function sendChat(){
+
+let msg=document.getElementById("chatInput").value
+
+document.getElementById("chatBox").innerHTML+="<br>"+currentUser+": "+msg
+
+}
+
+
+
+function showMap(loc){
+
+document.getElementById("mapInfo").innerHTML="Location: "+loc+" | Status: Active"
+
+}
+
+
+
+function lockUser(){
+
+let u=document.getElementById("lockUser").value
+
+if(users[u]) users[u].locked=true
+
+}
+
+
+
+function unlockUser(){
+
+let u=document.getElementById("lockUser").value
+
+if(users[u]) users[u].locked=false
+
+}
+
+
+
+function announce(){
+
+document.getElementById("announcement").innerHTML=document.getElementById("announceBox").value
+
+}
+
+
+
+function createUser(){
+
+let u=document.getElementById("newUser").value
+let p=document.getElementById("newPass").value
+let r=document.getElementById("newRole").value
+
+users[u]={password:p,role:r,locked:false}
+
+}
+
+
+
+let term=document.getElementById("terminal")
+
+document.getElementById("command").addEventListener("keypress",function(e){
+
+if(e.key==="Enter"){
+
+let cmd=this.value
+
+term.innerHTML+="\n> "+cmd
+
+runAI(cmd)
+
+this.value=""
+
+}
+
+})
+
+
+
+function speak(text){
+
+let speech=new SpeechSynthesisUtterance(text)
+
+speech.rate=1
+
+window.speechSynthesis.speak(speech)
+
+}
+
+
+
+function runAI(cmd){
+
+cmd=cmd.toLowerCase()
+
+const { jsPDF } = window.jspdf
+
+
+if(cmd==="help"){
+
+term.innerHTML+="\nCommands: status, scan, agents, missions, make pdf, whoami"
+
+speak("Displaying commands")
+
+}
+
+else if(cmd==="status"){
+
+term.innerHTML+="\nNetwork operational"
+
+speak("Shadow network operational")
+
+}
+
+else if(cmd==="scan"){
+
+term.innerHTML+="\nSatellite scan complete"
+
+speak("No threats detected")
+
+}
+
+else if(cmd==="agents"){
+
+openPanel("agentsPanel")
+
+}
+
+else if(cmd==="missions"){
+
+openPanel("missionsPanel")
+
+}
+
+else if(cmd==="whoami"){
+
+term.innerHTML+="\n"+currentUser
+
+speak("You are "+currentUser)
+
+}
+
+else if(cmd==="make pdf"){
+
+const doc=new jsPDF()
+
+doc.text("Shadow Organization Report",20,20)
+
+doc.text("Generated by: "+currentUser,20,30)
+
+doc.text(new Date().toString(),20,40)
+
+doc.save("shadow_report.pdf")
+
+speak("PDF generated")
+
+}
+
+}
+
+
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+
+const recognition = new SpeechRecognition()
+
+recognition.continuous=true
+
+
+function startVoiceAI(){
+
+recognition.start()
+
+speak("Voice AI activated")
+
+}
+
+
+recognition.onresult=function(event){
+
+let text=event.results[event.results.length-1][0].transcript
+
+term.innerHTML+="\nVOICE: "+text
+
+runAI(text)
+
+}
+
+
+
+</script>
+
+</body>
+</html>
