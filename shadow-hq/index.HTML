@@ -1,464 +1,609 @@
 <!DOCTYPE html>
 <html>
-
 <head>
+<meta charset="UTF-8">
+<title>Shadow Organization HQ</title>
 
-<title>Shadow Organization Command Network</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
-
-body{
-background:#050505;
-color:#ff2020;
-font-family:Courier New;
-margin:0;
-}
-
-header{
-text-align:center;
-padding:20px;
-border-bottom:1px solid red;
-}
-
-#title{
-font-size:30px;
-letter-spacing:6px;
-}
-
-#loginBox{
-position:absolute;
-top:45%;
-left:50%;
-transform:translate(-50%,-50%);
-border:1px solid red;
-padding:30px;
-background:black;
-}
-
-input,button,textarea{
-background:black;
-border:1px solid red;
-color:red;
-padding:6px;
-margin:5px;
-}
-
-#tabs{
-display:none;
-text-align:center;
-background:#111;
-padding:10px;
-}
-
-.tab{
-margin:4px;
-cursor:pointer;
-}
-
-.panel{
-display:none;
-padding:20px;
-}
-
-#logoCenter{
-display:none;
-text-align:center;
-margin-top:30px;
-}
-
-#logoCenter img{
-width:220px;
-}
-
-.section{
-border:1px solid red;
-margin-top:15px;
-padding:10px;
-}
-
-#terminal{
-height:200px;
-overflow:auto;
-border:1px solid red;
-padding:10px;
-}
-
-#chat{
-height:160px;
-overflow:auto;
-border:1px solid red;
-padding:10px;
-}
-
-#aiChat{
-height:200px;
-overflow:auto;
-border:1px solid red;
-padding:10px;
-}
-
+body{background:#050505;color:#ff1a1a;font-family:Courier New;margin:0;text-align:center}
+header{background:black;border-bottom:2px solid red;padding:15px}
+#logo{width:140px}
+button,input{background:black;color:#ff1a1a;border:1px solid red;padding:6px;margin:4px}
+.section{display:none;padding:20px}
+.tab{display:inline-block;border:1px solid red;padding:8px;margin:4px;cursor:pointer}
+#panel{display:none}
+#terminalBox{height:220px;overflow:auto;border:1px solid red;padding:10px}
+#map{height:420px;margin-top:10px}
 </style>
-
 </head>
 
 <body>
 
 <header>
-
-<div id="title">SHADOW ORGANIZATION NETWORK</div>
-
+<h1>Shadow Organization HQ</h1>
+<div id="clock"></div>
 </header>
 
-<!-- LOGIN -->
+<div id="login">
 
-<div id="loginBox">
-
-<h2>Secure Login</h2>
+<h2>Secure Access Portal</h2>
 
 <input id="user" placeholder="Username"><br>
 <input id="pass" type="password" placeholder="Password"><br>
 
-<button onclick="login()">ENTER</button>
+<button onclick="login()">Enter HQ</button>
 
 <p id="msg"></p>
 
 </div>
 
-<!-- NAV -->
+<div id="panel">
 
-<div id="tabs">
+<h2 id="welcome"></h2>
 
-<button onclick="openPanel('dashboard')">Dashboard</button>
-<button onclick="openPanel('missions')">Missions</button>
-<button onclick="openPanel('agents')">Agents</button>
-<button onclick="openPanel('units')">Units</button>
-<button onclick="openPanel('intel')">Intel Vault</button>
-<button onclick="openPanel('map')">Operations Map</button>
-<button onclick="openPanel('terminalPanel')">Command AI</button>
-<button onclick="openPanel('chatPanel')">Agent Chat</button>
-<button onclick="openPanel('aiChatPanel')">AI Chat</button>
-<button onclick="openPanel('adminPanel')">Admin</button>
+<div>
 
-</div>
-
-<div id="logoCenter">
-
-<img src="logo.png">
+<div class="tab" onclick="openTab('dashboard')">Dashboard</div>
+<div class="tab" onclick="openTab('missions')">Missions</div>
+<div class="tab" onclick="openTab('agents')">Agents</div>
+<div class="tab" onclick="openTab('terminal')">Terminal</div>
+<div class="tab" onclick="openTab('mapTab')">Satellite</div>
+<div class="tab" onclick="openTab('ranks')">Ranks</div>
+<div class="tab" onclick="openTab('admin')">Admin</div>
 
 </div>
 
-<!-- DASHBOARD -->
-
-<div id="dashboard" class="panel">
-
-<h2>Organization Status</h2>
-
+<div id="dashboard" class="section">
+<h3>Organization Status</h3>
 <div id="status"></div>
-
 </div>
 
-<!-- MISSIONS -->
+<div id="missions" class="section">
 
-<div id="missions" class="panel">
-
-<h2>Mission Database</h2>
+<h3>Mission Board</h3>
 
 <ul id="missionList"></ul>
 
-<input id="mName" placeholder="Mission Name">
-<input id="mLoc" placeholder="Location">
+<input id="missionName" placeholder="Mission name">
+<input id="missionLoc" placeholder="Location">
 
-<button onclick="addMission()">Add Mission</button>
+<button onclick="createMission()">Create Mission</button>
 
 </div>
 
-<!-- AGENTS -->
+<div id="agents" class="section">
 
-<div id="agents" class="panel">
-
-<h2>Agent Profiles</h2>
-
+<h3>Agent Database</h3>
 <ul id="agentList"></ul>
 
-<input id="aName" placeholder="Agent Name">
-<input id="aRank" placeholder="Rank">
+</div>
 
-<button onclick="addAgent()">Add Agent</button>
+<div id="terminal" class="section">
+
+<h3>Shadow Terminal</h3>
+
+<div id="terminalBox"></div>
+
+<input id="cmd" placeholder="command">
+<button onclick="command()">execute</button>
 
 </div>
 
-<!-- UNITS -->
+<div id="mapTab" class="section">
 
-<div id="units" class="panel">
+<h3>Satellite Operations Map</h3>
 
-<h2>Shadow Military Units</h2>
-
-<div class="section">Hellblades — Elite assassination unit</div>
-<div class="section">Bloodhounds — Tracking division</div>
-<div class="section">Night Crows — Recon & surveillance</div>
-<div class="section">Black Spear — Direct combat unit</div>
+<div id="map"></div>
 
 </div>
 
-<!-- INTEL -->
+<div id="ranks" class="section">
 
-<div id="intel" class="panel">
+<h3>Rank Hierarchy</h3>
 
-<h2>Intel Vault</h2>
-
-<button onclick="downloadIntel('Alpha File')">Download Alpha File</button>
-<button onclick="downloadIntel('Satellite Scan')">Download Satellite Data</button>
+<ul id="rankList"></ul>
 
 </div>
 
-<!-- MAP -->
+<div id="admin" class="section">
 
-<div id="map" class="panel">
+<h3>Admin Control</h3>
 
-<h2>Global Operations</h2>
+<input id="newUser" placeholder="new agent">
+<input id="newPass" placeholder="password">
 
-<div onclick="mapInfo('Arctic Base')">Arctic Base</div>
-<div onclick="mapInfo('Pacific Listening Post')">Pacific Listening Post</div>
-<div onclick="mapInfo('European Intel Hub')">European Intel Hub</div>
-<div onclick="mapInfo('Desert Black Site')">Desert Black Site</div>
-
-<div id="mapInfo"></div>
+<button onclick="addAgent()">Create Agent</button>
 
 </div>
 
-<!-- COMMAND AI -->
-
-<div id="terminalPanel" class="panel">
-
-<h2>Shadow Command AI</h2>
-
-<div id="terminal">Command AI Online</div>
-
-<input id="command" placeholder="Enter command">
-
 </div>
-
-<!-- AGENT CHAT -->
-
-<div id="chatPanel" class="panel">
-
-<h2>Agent Communication</h2>
-
-<div id="chat"></div>
-
-<input id="chatInput">
-<button onclick="sendChat()">Send</button>
-
-</div>
-
-<!-- AI CHAT -->
-
-<div id="aiChatPanel" class="panel">
-
-<h2>Shadow AI Chat Assistant</h2>
-
-<div id="aiChat"></div>
-
-<input id="aiInput" placeholder="Ask the AI">
-<button onclick="chatAI()">Send</button>
-
-</div>
-
-<!-- ADMIN -->
-
-<div id="adminPanel" class="panel">
-
-<h2>Admin Control</h2>
-
-<h3>Create Agent</h3>
-
-<input id="newUser">
-<input id="newPass">
-
-<button onclick="createUser()">Create</button>
-
-<h3>Lock Agent</h3>
-
-<input id="lockUser">
-
-<button onclick="lockUser()">Lock</button>
-
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 
+/* CORE DATA /
+
+let ranks=[
+"Shadow Initiate","Veil Walker","Silent Trace","Night Watcher",
+"Shade Operative","Shadow Agent","Phantom Agent","Umbra Hunter",
+"Void Tracker","Dusk Operative","Phantom Blade","Night Phantom",
+"Umbra Enforcer","Void Stalker","Shadow Reaper","Umbra Commander",
+"Void Overseer","Phantom Architect","Shadow Warden","Umbra Highlord",
+"Dread Umbra","Veil Sovereign","Night Regent","Void Sovereign",
+"Umbra Prime","Shadow Umbra"
+]
+
 let users={
-
-"Shadow Umbra":{password:"Shadow Umbra",role:"owner",locked:false},
-
-"Admin1":{password:"Shadow01",role:"admin",locked:false},
-"Admin2":{password:"Shadow02",role:"admin",locked:false},
-"Admin3":{password:"Shadow03",role:"admin",locked:false},
-"Admin4":{password:"Shadow04",role:"admin",locked:false},
-
-"Agent1":{password:"Agent01",role:"member",locked:false}
-
+"Shadow Umbra":{password:"Shadow Umbra",rank:25,role:"owner"},
+"Agent1":{password:"Agent01",rank:1,role:"member"}
 }
 
-let currentUser=null
+let missions=[
+{name:"Operation Nightfall",location:"Arctic Base"},
+{name:"Silent Dagger",location:"Pacific Hub"}
+]
+
+let currentUser=""
+let credits=1000
+let globalThreat="LOW"
+
+/ LOGIN /
 
 function login(){
 
-let u=user.value
-let p=pass.value
+let u=user.value.trim()
+let p=pass.value.trim()
 
 if(users[u] && users[u].password===p){
 
-if(users[u].locked){
-msg.innerHTML="ACCOUNT LOCKED"
-return
-}
-
 currentUser=u
 
-loginBox.style.display="none"
-tabs.style.display="block"
-logoCenter.style.display="block"
+login.style.display="none"
+panel.style.display="block"
 
+welcome.innerHTML="Welcome "+u+" | Rank: "+ranks[users[u].rank]
+
+loadAgents()
+loadRanks()
+renderMissions()
 updateStatus()
+initMap()
+
+openTab("dashboard")
 
 }else{
+
 msg.innerHTML="ACCESS DENIED"
-}
 
 }
 
-function openPanel(name){
+}
 
-document.querySelectorAll(".panel").forEach(p=>{
-p.style.display="none"
-})
+/ TABS /
 
-document.getElementById(name).style.display="block"
+function openTab(id){
+
+document.querySelectorAll(".section").forEach(s=>s.style.display="none")
+document.getElementById(id).style.display="block"
 
 }
+
+/ STATUS /
 
 function updateStatus(){
 
 status.innerHTML=
-
-"Network: Online<br>"+
-"Active Agents: "+agentList.children.length+"<br>"+
-"Missions: "+missionList.children.length+"<br>"+
-"Threat Level: Low"
+"Agents: "+Object.keys(users).length+
+"<br>Missions: "+missions.length+
+"<br>Credits: "+credits+
+"<br>Threat Level: "+globalThreat
 
 }
 
-function addMission(){
+/ AGENTS /
+
+function loadAgents(){
+
+agentList.innerHTML=""
+
+for(let a in users){
 
 let li=document.createElement("li")
-li.innerText=mName.value+" - "+mLoc.value
+li.innerHTML=a+" | "+ranks[users[a].rank]
+agentList.appendChild(li)
 
-missionList.appendChild(li)
-
-updateStatus()
+}
 
 }
 
 function addAgent(){
 
-let li=document.createElement("li")
-li.innerText=aName.value+" | "+aRank.value
+let u=newUser.value
+let p=newPass.value
 
-agentList.appendChild(li)
+if(!u||!p)return
+
+users[u]={password:p,rank:0,role:"member"}
+
+loadAgents()
+updateStatus()
+
+}
+
+/ RANKS /
+
+function loadRanks(){
+
+rankList.innerHTML=""
+
+for(let i=ranks.length-1;i>=0;i--){
+
+let li=document.createElement("li")
+li.innerHTML=(i+1)+" "+ranks[i]
+rankList.appendChild(li)
+
+}
+
+}
+
+/ MISSIONS /
+
+function renderMissions(){
+
+missionList.innerHTML=""
+
+missions.forEach((m,i)=>{
+
+let li=document.createElement("li")
+
+li.innerHTML=
+m.name+" - "+m.location+
+" <button onclick='acceptMission("+i+")'>Accept</button>"
+
+missionList.appendChild(li)
+
+})
+
+}
+
+function createMission(){
+
+let name=missionName.value
+let loc=missionLoc.value
+
+if(!name||!loc)return
+
+missions.push({name:name,location:loc})
+
+renderMissions()
+updateStatus()
+
+}
+
+function acceptMission(i){
+
+alert("Mission accepted: "+missions[i].name)
+
+credits+=100
 
 updateStatus()
 
 }
 
-function sendChat(){
+/ TERMINAL /
 
-chat.innerHTML+="<br>"+currentUser+": "+chatInput.value
+function command(){
 
-chatInput.value=""
+let c=cmd.value.toLowerCase()
 
-}
+terminalBox.innerHTML+="<br>> "+c
 
-function chatAI(){
+if(c==="help")
+terminalBox.innerHTML+="<br>help agents missions ranks time date scan credits threat radar"
 
-let msg=aiInput.value.toLowerCase()
+if(c==="agents")
+for(let a in users) terminalBox.innerHTML+="<br>"+a
 
-let response=""
+if(c==="missions")
+missions.forEach(m=>terminalBox.innerHTML+="<br>"+m.name)
 
-if(msg.includes("hello")) response="Hello agent."
-else if(msg.includes("who are you")) response="I am the Shadow AI assistant."
-else if(msg.includes("status")) response="All systems operational."
-else response="Processing request."
+if(c==="credits")
+terminalBox.innerHTML+="<br>"+credits
 
-aiChat.innerHTML+="<br>You: "+msg
-aiChat.innerHTML+="<br>AI: "+response
+if(c==="scan")
+terminalBox.innerHTML+="<br>Satellite sweep complete"
 
-aiInput.value=""
-
-}
-
-function createUser(){
-
-users[newUser.value]={password:newPass.value,role:"member",locked:false}
-
-alert("User Created")
+if(c==="radar")
+startRadar()
 
 }
 
-function lockUser(){
+/ MAP /
 
-let u=document.getElementById("lockUser").value
+function initMap(){
 
-if(users[u]){
+let map=L.map('map').setView([20,0],2)
 
-users[u].locked=true
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
 
-alert("User Locked")
-
-}
-
-}
-
-function downloadIntel(name){
-
-const { jsPDF } = window.jspdf
-
-const doc=new jsPDF()
-
-doc.text("Shadow Intel File: "+name,20,20)
-
-doc.save(name+".pdf")
+L.marker([78,-20]).addTo(map).bindPopup("Arctic Base")
+L.marker([-15,120]).addTo(map).bindPopup("Pacific Hub")
 
 }
 
-function mapInfo(loc){
+/ RADAR /
 
-document.getElementById("mapInfo").innerHTML="Location: "+loc+" — Operational"
+function startRadar(){
 
-}
+let r=document.createElement("div")
 
-/* COMMAND AI */
+r.style.position="fixed"
+r.style.bottom="20px"
+r.style.left="20px"
+r.style.width="120px"
+r.style.height="120px"
+r.style.border="2px solid red"
+r.style.borderRadius="50%"
+r.style.animation="spin 4s linear infinite"
 
-command.addEventListener("keypress",function(e){
-
-if(e.key==="Enter"){
-
-let cmd=command.value.toLowerCase()
-
-terminal.innerHTML+="<br>> "+cmd
-
-if(cmd=="hello") terminal.innerHTML+="<br>AI: Hello agent."
-else if(cmd=="status") terminal.innerHTML+="<br>AI: Systems operational."
-else if(cmd=="make pdf") downloadIntel("Shadow_Report")
-else terminal.innerHTML+="<br>AI: Unknown command."
-
-command.value=""
+document.body.appendChild(r)
 
 }
 
+let style=document.createElement("style")
+style.innerHTML="@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}"
+document.head.appendChild(style)
+
+/ THREAT SYSTEM */
+
+setInterval(()=>{
+
+let levels=["LOW","GUARDED","ELEVATED","HIGH","CRITICAL"]
+
+globalThreat=levels[Math.floor(Math.random()5)]
+
+updateStatus()
+
+},15000)
+
+/ CLOCK */
+
+setInterval(()=>{
+
+clock.innerHTML=new Date().toLocaleString()
+
+},1000)
+
+</script>
+<script>
+
+/* ============================= /
+/ SHADOW HQ EXTENSION PACK 4 /
+/ ============================= /
+
+/ -------- ADD 40 NEW RANKS -------- /
+
+let extraRanks=[
+"Whisper Initiate",
+"Shade Listener",
+"Dark Observer",
+"Veil Initiate",
+"Phantom Listener",
+"Night Archivist",
+"Umbra Scout",
+"Silent Warden",
+"Shadow Seeker",
+"Void Listener",
+"Phantom Seer",
+"Dark Analyst",
+"Night Strategist",
+"Shadow Architect",
+"Umbra Strategist",
+"Phantom Overseer",
+"Void Overseer Prime",
+"Shadow Executioner",
+"Umbra Executioner",
+"Night Sovereign",
+"Void Sovereign Prime",
+"Shadow Dominus",
+"Umbra Dominus",
+"Night Dominus",
+"Shadow Ascendant",
+"Void Ascendant",
+"Umbra Ascendant",
+"Shadow Regent",
+"Umbra Regent",
+"Night Regent Prime",
+"Void Regent",
+"Shadow Eternal",
+"Umbra Eternal",
+"Void Eternal",
+"Shadow Paragon",
+"Umbra Paragon",
+"Night Paragon",
+"Void Paragon",
+"Shadow Apex",
+"Umbra Apex"
+]
+
+extraRanks.forEach(r=>{
+if(!ranks.includes(r)) ranks.unshift(r)
 })
+
+/ -------- SHADOW CREDITS SYSTEM -------- /
+
+let shadowCredits=500
+
+function giveCredits(amount){
+
+shadowCredits+=amount
+
+if(typeof updateStatus==="function") updateStatus()
+
+}
+
+/ -------- AGENT PROFILE SYSTEM -------- /
+
+function viewAgentProfile(name){
+
+if(!users[name]) return
+
+let info=users[name]
+
+alert(
+"AGENT PROFILE\n\n"+
+"Name: "+name+"\n"+
+"Rank: "+ranks[info.rank]+"\n"+
+"Role: "+info.role+"\n"+
+"Shadow Credits: "+shadowCredits
+)
+
+}
+
+/ -------- IMPROVED MISSION UI -------- /
+
+function acceptMissionExtended(index){
+
+if(!missions[index]) return
+
+alert("Mission accepted: "+missions[index].name)
+
+giveCredits(150)
+
+if(users[currentUser].rank < ranks.length-1){
+users[currentUser].rank++
+}
+
+if(typeof loadRanks==="function") loadRanks()
+
+}
+
+function declineMission(index){
+
+alert("Mission declined.")
+
+}
+
+/ -------- INTEL VAULT -------- /
+
+let intelFiles=[
+"FILE-01 : Arctic Listening Station",
+"FILE-02 : Deep Pacific Signal Array",
+"FILE-03 : Shadow Satellite Relay",
+"FILE-04 : Veil Surveillance Grid",
+"FILE-05 : Umbra Global Network"
+]
+
+function openIntelVault(){
+
+let text="CLASSIFIED INTEL VAULT\n\n"
+
+intelFiles.forEach(f=>{
+text+=f+"\n"
+})
+
+alert(text)
+
+}
+
+/ -------- FACTION INFLUENCE TRACKER -------- /
+
+let globalInfluence=12
+
+function increaseInfluence(){
+
+globalInfluence++
+
+console.log("Faction Influence:",globalInfluence)
+
+}
+
+/ -------- AI COMMANDER RESPONSES -------- /
+
+function commanderAI(question){
+
+let q=question.toLowerCase()
+
+if(q.includes("mission")) return "Commander: Missions available in operations tab."
+
+if(q.includes("rank")) return "Commander: Continue completing operations to ascend."
+
+if(q.includes("shadow")) return "Commander: The shadows are always watching."
+
+if(q.includes("help")) return "Commander: Use terminal command 'help' to view systems."
+
+return "Commander: Processing request..."
+
+}
+
+/ -------- ADD TERMINAL COMMANDS -------- /
+
+let oldCommand=command
+
+command=function(){
+
+let c=cmd.value.toLowerCase()
+
+if(c==="credits"){
+terminalBox.innerHTML+="<br>Shadow Credits: "+shadowCredits
+return
+}
+
+if(c==="intel"){
+terminalBox.innerHTML+="<br>Opening Intel Vault..."
+openIntelVault()
+return
+}
+
+if(c==="influence"){
+terminalBox.innerHTML+="<br>Faction Influence: "+globalInfluence
+return
+}
+
+if(c.startsWith("profile")){
+
+let parts=c.split(" ")
+
+if(parts[1]) viewAgentProfile(parts[1])
+
+return
+}
+
+if(c.startsWith("commander")){
+
+let q=c.replace("commander","")
+
+terminalBox.innerHTML+="<br>"+commanderAI(q)
+
+return
+}
+
+/ run original command /
+
+oldCommand()
+
+}
+
+/ -------- RANDOM FACTION EVENTS -------- */
+
+setInterval(()=>{
+
+let events=[
+"Shadow network expanded.",
+"New surveillance node online.",
+"Foreign signals intercepted.",
+"Shadow agents deployed globally."
+]
+
+let e=events[Math.floor(Math.random()*events.length)]
+
+console.log("Shadow Event:",e)
+
+increaseInfluence()
+
+},20000)
 
 </script>
 
